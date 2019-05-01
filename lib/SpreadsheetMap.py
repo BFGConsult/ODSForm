@@ -15,7 +15,7 @@ class SpreadsheetMap:
       self.__data = data
       self.mapExpandValidate()
 
-   def save(self, filename):
+   def __applyDataToDocument(self):
       doc = ezodf.opendoc(self.__map['spreadsheet'])
 
       if doc.doctype in ('ods', 'ots'):
@@ -27,7 +27,13 @@ class SpreadsheetMap:
                sheet[key].set_value(self[key])
             else:
                sheet[key].set_value(self[key], mtype)
-         doc.saveas(filename)
+      return doc
+
+   def save(self, filename):
+      self.__applyDataToDocument().saveas(filename)
+
+   def tobytes(self):
+      return self.__applyDataToDocument().tobytes()
 
    def __str__(self):
       return pprint.PrettyPrinter(indent=4).pformat({"map":self.__map, "data": self.__data})
