@@ -1,0 +1,46 @@
+{
+    "spreadsheet": "../../resources/Expenselist.ots",
+    "outputname": "Expenselist.ods",
+    "UseFieldNamesDirectly": true,
+    "mapping": {
+        "account": {
+            "cell": "D10",
+            "pattern": "\\d{4}\\.\\d{2}\\.\\d{5}|\\d{11}",
+            "type": "integer"
+        },
+        "address": "D8",
+        "entries": {
+            "cell": "A15",
+            "multiple": {
+                "entry": "row",
+                "span": 11
+            },
+            "type": [
+                "date",
+                null,
+                "string",
+                null,
+                null,
+                null,
+                "integer"
+            ]
+        },
+        "name": "d7",
+        "place": {
+            "type": "string"
+        },
+        "purpose": "a4",
+        "zip": {
+            "pattern": "\\d{1,4}",
+            "type": "integer"
+        },
+        "zip-post": {
+            "cell": "D9",
+            "combine": [
+                "zip",
+                "place"
+            ],
+            "format": "%04d %s"
+        }
+    }
+}
