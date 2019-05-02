@@ -4,6 +4,11 @@
 import io, ezodf, sys, re, pprint
 from datetime import date, datetime
 
+try:
+  basestring
+except NameError:
+  basestring = str
+
 cellnumber = re.compile('([A-Z]{1,2})(\d+)')
 
 def wordLetter(s):
@@ -135,7 +140,7 @@ class SpreadsheetMap:
                   #Raise error if cu already exists
                   self.__data[cu]=self.__data[c]
                   del self.__data[c]
-               print c
+               print (c)
                if not cellnumber.match(cu):
                   raise ValueError("'%s' is not a valid cellreference" % (c))
                entry = {
