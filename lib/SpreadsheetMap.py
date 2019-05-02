@@ -35,6 +35,13 @@ class SpreadsheetMap:
    def tobytes(self):
       return self.__applyDataToDocument().tobytes()
 
+   @staticmethod
+   def mimetype():
+      return 'application/vnd.oasis.opendocument.spreadsheet'
+
+   def outputname(self):
+      return self.__map['outputname']
+
    def __str__(self):
       return pprint.PrettyPrinter(indent=4).pformat({"map":self.__map, "data": self.__data})
 
@@ -78,7 +85,8 @@ class SpreadsheetMap:
       return "%s%d" % (alph, coord[1])
 
    def mapExpandValidate(self):
-      defaultType = self.__map.setdefault('defaultType', u'string')
+      self.__map.setdefault('outputname', 'output.ods')
+      defaultType = self.__map.setdefault('defaultType', 'string')
       for m in self.__map['mapping']:
          if isinstance(self.__map['mapping'][m], basestring):
             cell = self.__map['mapping'][m]
