@@ -45,7 +45,7 @@ class Utlegg:
          return obj
 
 def usage():
-   sys.stderr.write("Usage: %s [-o outputfile] inputfile <Purpose>\n\t\t< <Date1> <Text1> <Amount1> > [ <Date2> <Text2> <Amount2> ] […]\n" % sys.argv[0])
+   print("Usage: %s [-o outputfile] inputfile <Purpose>\n\t\t< <Date1> <Text1> <Amount1> > [ <Date2> <Text2> <Amount2> ] […]\n" % sys.argv[0], file=sys.stderr)
 
 if __name__ == "__main__":
    try:
@@ -119,16 +119,22 @@ if __name__ == "__main__":
    req = Request(url)
    req.add_header('Content-Type', 'application/json')
 
-   response = urlopen(req, json.dumps(conf, default=str).encode('utf-8'))
+   try:
+       response = urlopen(req, json.dumps(conf, default=str).encode('utf-8'))
+   except:
+       print('Connection refused: %s' % (url), file=sys.stderr)
+       EX_UNAVAILABLE=69
+       sys.exit(EX_UNAVAILABLE)
+
    if (response.code==200):
        content = response.read()
        if not outputfile:
            cd = response.headers['content-disposition']
            if cd:
                outputfile = dict((elem.strip()+'=').split('=')[0:2]
-                  for elem in cd[0].split(';')).get('filename','Output.ods')
+                  for elem in cd.split(';')).get('filename','Output.ods')
        with open(outputfile, 'wb') as outfile:
            outfile.write(content)
    else:
-       print('Something went wrong')
+       print('Unhandled response code %d' % (response.code), file=sys.stderr)
        sys.exit(1)
