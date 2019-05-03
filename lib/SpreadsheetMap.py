@@ -1,5 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import io, ezodf, sys, re, pprint
 from datetime import date, datetime
@@ -18,7 +21,7 @@ class SpreadsheetMap:
    def __init__(self, map, data):
       self.__map = map
       self.__data = data
-      self.mapExpandValidate()
+      self.mapExpandValidate(self.__map)
 
    def __applyDataToDocument(self):
       doc = ezodf.opendoc(self.__map['spreadsheet'])
@@ -50,8 +53,8 @@ class SpreadsheetMap:
    def __str__(self):
       return pprint.PrettyPrinter(indent=4).pformat({"map":self.__map, "data": self.__data})
 
-   def mapFromMap(self, entry):
-      defaultType = self.__map['defaultType']
+   @staticmethod
+   def mapFromMap(entry, defaultType):
       entry.setdefault(u'combine', None)
       entry.setdefault(u'format')
       entry.setdefault(u'type', defaultType)
@@ -68,6 +71,9 @@ class SpreadsheetMap:
                lut.append(None)
          multiple['lut']=lut
       return entry
+
+   def map():
+     return self.__map.deepcopy()
 
    @staticmethod
    def getCoord(cellname):
@@ -89,24 +95,25 @@ class SpreadsheetMap:
          alph=chr((n%26-1)+65)+alph
       return "%s%d" % (alph, coord[1])
 
-   def mapExpandValidate(self):
-      self.__map.setdefault('outputname', 'output.ods')
-      defaultType = self.__map.setdefault('defaultType', 'string')
-      for m in self.__map['mapping']:
-         if isinstance(self.__map['mapping'][m], basestring):
-            cell = self.__map['mapping'][m]
-            self.__map['mapping'][m]= {
-               u'cell': self.__map['mapping'][m],
+   @classmethod
+   def mapExpandValidate(cls, mymap):
+      mymap.setdefault('outputname', 'output.ods')
+      defaultType = mymap.setdefault('defaultType', 'string')
+      for m in mymap['mapping']:
+         if isinstance(mymap['mapping'][m], basestring):
+            cell = mymap['mapping'][m]
+            mymap['mapping'][m]= {
+               u'cell': mymap['mapping'][m],
             }
          
-         cell = self.__map['mapping'][m].setdefault(u'cell')
+         cell = mymap['mapping'][m].setdefault(u'cell')
          if cell:
             cell = cell.upper()
             if not cellnumber.match(cell):
                raise ValueError("'%s' is not a valid cellreference" % (cell))
-            self.__map['mapping'][m]['cell'] = cell
-         map=self.mapFromMap(self.__map['mapping'][m])
-         self.__map['mapping'][m]=map
+            mymap['mapping'][m]['cell'] = cell
+         mymap[m]=cls.mapFromMap(mymap['mapping'][m], mymap['defaultType'])
+      return mymap
 
    def keys(self):
       self.genkeys()
