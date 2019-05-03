@@ -1,0 +1,7 @@
+{
+    "account": 12345678901, 
+    "address": "123 Main St", 
+    "name": "John Doe", 
+    "place": "Anytown", 
+    "zip": 1234
+}
