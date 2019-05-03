@@ -117,7 +117,10 @@ if __name__ == "__main__":
       entry=Utlegg.getEntry(dato, text, verdi)
       entries.append(entry)
 
-   conf['entries'] = entries
+   conf['entries'] = sorted(entries)
+
+   if verbose:
+       print(json.dumps(conf, indent=4, default=str))
 
    req = Request(url)
    req.add_header('Content-Type', 'application/json')
