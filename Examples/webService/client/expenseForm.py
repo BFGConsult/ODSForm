@@ -3,7 +3,13 @@
 
 from __future__ import print_function
 
-import sys, getopt, os, json, yaml
+import io, sys, getopt, os, json
+try:
+    import yaml
+except:
+    #if yaml is not available everything still works, as long as we do
+    #not try to only try to load json data
+    pass
 from datetime import date, datetime
 
 try:
@@ -14,14 +20,11 @@ except ImportError:
     from urllib2 import urlopen, Request
 
 def loadConfig(filename):
-   try:
-      if filename=='-':
-         filename=sys.stdin
-      conf = json.load(filename)
-   except:
-      stream = open(filename, "r")
-      conf = yaml.load(stream)
-      stream.close()
+   with io.open(sys.stdin.fileno(), mode='rb', closefd=False) if filename=='-' else io.open(filename, "rb") as stream:
+       if stream.peek(1).decode('utf-8')[0] == '{':
+           conf = json.load(stream)
+       else:
+           conf = yaml.load(stream)
    return conf
 
 class Utlegg:
@@ -59,7 +62,7 @@ if __name__ == "__main__":
    outputfile = None
 
    datestamp = date.today()
-   conffile = os.path.expanduser("staticdata.yml")
+   conffile = os.path.expanduser("staticdata.json")
    verbose = False
    url=None
 
