@@ -12,7 +12,9 @@ try:
 except NameError:
   basestring = str
 
-cellnumber = re.compile('([A-Z]{1,2})(\d+)')
+#cellnumber = re.compile('([A-Z]{1,2})(\d+)')
+#Support for overwide cellnumbering
+cellnumber = re.compile('([A-Z]{1,5})(\d+)')
 
 def wordLetter(s):
    return ord(s)-65
@@ -62,37 +64,31 @@ class SpreadsheetMap:
       multiple=entry.setdefault(u'multiple')
       if multiple:
          j=-1
-         lut=[]
-         for i in range(len(entry['type'])):
-            if entry['type'][i]:
-               j+=1
-               lut.append(j)
-            else:
-               lut.append(None)
-         multiple['lut']=lut
+         multiple['lut']=[
+           ++j if t else None for i, t in enumerate(entry['type'])]
       return entry
 
    def map():
      return self.__map.deepcopy()
 
    @staticmethod
-   def getCoord(cellname):
+   def get_coord(cellname):
       fields = cellnumber.match(cellname)
       alph = fields.groups()[0]
       num = int(fields.groups()[1])
-      
-      anum = wordLetter(alph[0])
-      for i in range(1, len(alph)):
-         anum = anum*26+wordLetter(alph[i])
-      return (anum,num)
+
+      anum = 0
+      for i,c in enumerate(alph):
+        anum = anum*26 + wordLetter(c) + 1
+      return (anum - 1,num)
 
    @staticmethod
-   def makeCoord(coord):
+   def make_coord(coord):
       n=coord[0]
       alph=chr((n%26)+65)
       while n>=26:
-         n=n/26
-         alph=chr((n%26-1)+65)+alph
+         n=n//26-1
+         alph=chr((n%26)+65)+alph
       return "%s%d" % (alph, coord[1])
 
    @classmethod
@@ -132,8 +128,8 @@ class SpreadsheetMap:
                ncols = len(map['type'])
                nrows = int(map['multiple']['span'])
                cellcoord = self.getCoord(map['cell'])
-               for i in range (0, nrows):
-                  for j in range (0, ncols):
+               for i in range (nrows):
+                  for j in range (ncols):
                      if map['type'][j]:
                         mycoord = (cellcoord[0]+j, cellcoord[1]+i)
                         pcoord= self.makeCoord(mycoord)
