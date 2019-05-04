@@ -23,6 +23,15 @@
                 null,
                 null,
                 "integer"
+            ],
+            "label": [
+                "date",
+                null,
+                "text",
+                null,
+                null,
+                null,
+                "amount"
             ]
         },
         "name": "d7",
