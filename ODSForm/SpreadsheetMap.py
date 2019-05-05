@@ -4,13 +4,17 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import io, ezodf, sys, re, pprint
+import io, ezodf, os, sys, re, pprint
 from datetime import date, datetime
 
 try:
   basestring
 except NameError:
   basestring = str
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 
 #cellnumber = re.compile('([A-Z]{1,2})(\d+)')
 #Support for overwide cellnumbering
@@ -23,16 +27,19 @@ class SpreadsheetMap:
    def __init__(self, map, data):
       self.__map = map
       self.__data = data
-      self.mapExpandValidate(self.__map)
+      self.map_expand_validate(self.__map)
 
-   def __applyDataToDocument(self):
-      doc = ezodf.opendoc(self.__map['spreadsheet'])
+   def __apply_data_to_document(self):
+      filename = self.__map['spreadsheet']
+      if not os.path.isfile(filename):
+        raise FileNotFoundError("%s not found" % filename)
+      doc = ezodf.opendoc(filename)
 
       if doc.doctype in ('ods', 'ots'):
          sheet = doc.sheets[0]
 
          for key in self.keys():
-            mtype=self.getType(key)
+            mtype=self.gettype(key)
             if mtype in ('integer'):
                sheet[key].set_value(self[key])
             else:
@@ -40,10 +47,10 @@ class SpreadsheetMap:
       return doc
 
    def save(self, filename):
-      self.__applyDataToDocument().saveas(filename)
+      self.__apply_data_to_document().saveas(filename)
 
    def tobytes(self):
-      return self.__applyDataToDocument().tobytes()
+      return self.__apply_data_to_document().tobytes()
 
    @staticmethod
    def mimetype():
@@ -56,7 +63,7 @@ class SpreadsheetMap:
       return pprint.PrettyPrinter(indent=4).pformat({"map":self.__map, "data": self.__data})
 
    @staticmethod
-   def mapFromMap(entry, defaultType):
+   def map_from_map(entry, defaultType):
       entry.setdefault(u'combine', None)
       entry.setdefault(u'format')
       entry.setdefault(u'type', defaultType)
@@ -72,7 +79,7 @@ class SpreadsheetMap:
      return self.__map.deepcopy()
 
    @staticmethod
-   def get_coord(cellname):
+   def getcoord(cellname):
       fields = cellnumber.match(cellname)
       alph = fields.groups()[0]
       num = int(fields.groups()[1])
@@ -83,7 +90,7 @@ class SpreadsheetMap:
       return (anum - 1,num)
 
    @staticmethod
-   def make_coord(coord):
+   def makecoord(coord):
       n=coord[0]
       alph=chr((n%26)+65)
       while n>=26:
@@ -92,7 +99,7 @@ class SpreadsheetMap:
       return "%s%d" % (alph, coord[1])
 
    @classmethod
-   def mapExpandValidate(cls, mymap):
+   def map_expand_validate(cls, mymap):
       mymap.setdefault('outputname', 'output.ods')
       defaultType = mymap.setdefault('defaultType', 'string')
       for m in mymap['mapping']:
@@ -108,7 +115,7 @@ class SpreadsheetMap:
             if not cellnumber.match(cell):
                raise ValueError("'%s' is not a valid cellreference" % (cell))
             mymap['mapping'][m]['cell'] = cell
-         mymap[m]=cls.mapFromMap(mymap['mapping'][m], mymap['defaultType'])
+         mymap[m]=cls.map_from_map(mymap['mapping'][m], mymap['defaultType'])
       return mymap
 
    def keys(self):
@@ -127,12 +134,12 @@ class SpreadsheetMap:
             if map['multiple']['entry']=="row":
                ncols = len(map['type'])
                nrows = int(map['multiple']['span'])
-               cellcoord = self.getCoord(map['cell'])
+               cellcoord = self.getcoord(map['cell'])
                for i in range (nrows):
                   for j in range (ncols):
                      if map['type'][j]:
                         mycoord = (cellcoord[0]+j, cellcoord[1]+i)
-                        pcoord= self.makeCoord(mycoord)
+                        pcoord= self.makecoord(mycoord)
                         self.__rmap[pcoord]=m
 
       if self.__map['UseFieldNamesDirectly']:
@@ -168,9 +175,9 @@ class SpreadsheetMap:
 
    def __getitem__(self, item):
       key = self.__rmap[item]
-      return self.getDataEntry(key, item)
+      return self.get_data_entry(key, item)
 
-   def getDataEntry(self, key, item=None):
+   def get_data_entry(self, key, item=None):
       elem = self.__map['mapping'][key]
       if not elem['multiple']:
          if not elem['combine']:
@@ -178,13 +185,13 @@ class SpreadsheetMap:
          else:
             data = []
             for c in elem['combine']:
-               data.append(self.getDataEntry(c))
+               data.append(self.get_data_entry(c))
             data = elem['format'] % tuple(data)
          data = self.cast(data, elem['type'])
          return data
       else:
-         coord=self.getCoord(item)
-         base=self.getCoord(elem['cell'])
+         coord=self.getcoord(item)
+         base=self.getcoord(elem['cell'])
          x=coord[0]-base[0]
          y=coord[1]-base[1]
          multiple=elem['multiple']
@@ -198,14 +205,14 @@ class SpreadsheetMap:
             item = self.cast(self.__data[key][ay][ax], mtype)
          return item
 
-   def getType(self, item):
+   def gettype(self, item):
       key = self.__rmap[item]
       elem = self.__map['mapping'][key]
       if not elem['multiple']:
          return elem['type']
       else:
-         coord=self.getCoord(item)
-         base=self.getCoord(elem['cell'])
+         coord=self.getcoord(item)
+         base=self.getcoord(elem['cell'])
          x=coord[0]-base[0]
          mtype=elem['type'][x]
          return mtype
