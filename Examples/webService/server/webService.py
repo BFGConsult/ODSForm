@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 with open(sys.argv[3]) as map_file:
     mapping = json.load(map_file)
-mapping=SpreadsheetMap.mapExpandValidate(mapping)
+mapping=SpreadsheetMap.map_expand_validate(mapping)
 app = Flask(__name__)
 
 @app.route('/', methods=['POST', 'GET'])
