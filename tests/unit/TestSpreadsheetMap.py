@@ -1,10 +1,28 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 import unittest, copy, json
 from ODSForm import SpreadsheetMap
+
+import ezodf, os
 
 import pprint
 
 SM = SpreadsheetMap.SpreadsheetMap
+
+def loadOdfFromBytes(bytestring):
+    dumplocal=False
+    from tempfile import mkstemp
+    _, tmp = mkstemp()
+    with open(tmp, 'wb') as f:
+        f.write(bytestring)
+        f.flush()
+    if dumplocal:
+        with open('dump.ods', 'wb') as f:
+            f.write(bytestring)
+            f.flush()
+    doc = ezodf.opendoc(tmp)
+    os.remove(tmp)
+    return doc
 
 def genString(n, base='' , m=26, toplevel=True):
     if n==1:
@@ -54,9 +72,35 @@ class TestSpreadsheetMap(unittest.TestCase):
         mymap = copy.deepcopy(self.mapping)
         mydata = copy.deepcopy(self.data)
         sm = SM(mymap, mydata)
-        sm.tobytes()
-
-            
+        bytes = sm.tobytes()
+        ods = loadOdfFromBytes(bytes)
+        sheet=ods.sheets[0]
+        self.assertEqual(sheet['A4'].value,
+                         'Getting drunk')
+        #We should set date as well
+        #print(sheet['E4'].value)
+        self.assertEqual(sheet['D7'].value,
+                         'John Doe')
+        self.assertEqual(sheet['D8'].value,
+                         '123 Main St')
+        self.assertEqual(sheet['D9'].value,
+                         '1234 Anytown')
+        self.assertEqual(sheet['D10'].value,
+                         12345678901)
+        self.assertEqual(sheet['A15'].value,
+                         '2018-12-24')
+        self.assertEqual(sheet['C15'].value,
+                         'Spirits')
+        self.assertEqual(sheet['G15'].value,
+                         90)
+        self.assertEqual(sheet['A16'].value,
+                         '2019-05-04')
+        self.assertEqual(sheet['C16'].value,
+                         u'Øl')
+        self.assertEqual(sheet['G15'].value,
+                         90)
+        self.assertEqual(sheet['G16'].value,
+                         123)
 
 if __name__ == '__main__':
     unittest.main()

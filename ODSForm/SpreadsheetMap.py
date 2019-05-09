@@ -4,7 +4,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import io, ezodf, os, sys, re, pprint
+import ezodf
+
+import io, os, sys, re, pprint
 from datetime import date, datetime
 
 try:
@@ -70,9 +72,13 @@ class SpreadsheetMap:
       entry.setdefault(u'pattern')
       multiple=entry.setdefault(u'multiple')
       if multiple:
-         j=-1
          multiple['lut']=[
-           ++j if t else None for i, t in enumerate(entry['type'])]
+           -1 if t else None for i, t in enumerate(entry['type'])]
+         j=-1
+         for i,v in enumerate(multiple['lut']):
+           if v:
+             j+=1
+             multiple['lut'][i]=j
       return entry
 
    def map():
