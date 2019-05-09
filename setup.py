@@ -18,7 +18,6 @@ setup(
    platforms=['any'],
    install_requires=['pyexcel-ezodf', 'lxml'], #external packages as dependencies
    classifiers=[
-       "Programming Language :: Python :: 2.6",
        "Programming Language :: Python :: 2.7",
        "Programming Language :: Python :: 3",
        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
