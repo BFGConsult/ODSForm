@@ -68,6 +68,21 @@ class TestSpreadsheetMap(unittest.TestCase):
         mydata = copy.deepcopy(self.data)
         sm = SM(mymap, mydata)
 
+    def test_nonexisting_file(self):
+        mymap = copy.deepcopy(self.mapping)
+        mymap['spreadsheet']='dummy.ots'
+        mydata = copy.deepcopy(self.data)
+        sm = SM(mymap, mydata)
+        with self.assertRaises(IOError):
+            sm.tobytes()
+
+    def test_invalid_cellreference(self):
+        mymap = copy.deepcopy(self.mapping)
+        mymap['mapping']['account']['cell']='dummy'
+        mydata = copy.deepcopy(self.data)
+        with self.assertRaises(ValueError):
+            sm = SM(mymap, mydata)
+
     def test_tobytes(self):
         mymap = copy.deepcopy(self.mapping)
         mydata = copy.deepcopy(self.data)
