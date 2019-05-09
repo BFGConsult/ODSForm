@@ -1,0 +1,20 @@
+{
+    "account": 12345678901,
+    "name": "John Doe",
+    "zip": 1234,
+    "entries": [
+        [
+            "2019-05-04",
+            "Spirits",
+            90.0
+        ],
+        [
+            "2019-05-04",
+            "\u00d8l",
+            123.0
+        ]
+    ],
+    "place": "Anytown",
+    "purpose": "Getting drunk",
+    "address": "123 Main St"
+}
