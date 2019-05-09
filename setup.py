@@ -16,7 +16,7 @@ setup(
    packages=['ODSForm'],  #same as name
 #   packages=setuptools.find_packages(),
    platforms=['any'],
-   install_requires=['ezodf', 'libxml'], #external packages as dependencies
+   install_requires=['pyexcel-ezodf', 'lxml'], #external packages as dependencies
    classifiers=[
        "Programming Language :: Python :: 2.6",
        "Programming Language :: Python :: 2.7",
