@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import unittest, copy, json
 from ODSForm import SpreadsheetMap
+from ODSForm.SpreadsheetMap import FileNotFoundError
 
 import ezodf, os
 
@@ -73,7 +74,7 @@ class TestSpreadsheetMap(unittest.TestCase):
         mymap['spreadsheet']='dummy.ots'
         mydata = copy.deepcopy(self.data)
         sm = SM(mymap, mydata)
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileNotFoundError):
             sm.tobytes()
 
     def test_invalid_cellreference(self):
@@ -83,12 +84,7 @@ class TestSpreadsheetMap(unittest.TestCase):
         with self.assertRaises(ValueError):
             sm = SM(mymap, mydata)
 
-    def test_tobytes(self):
-        mymap = copy.deepcopy(self.mapping)
-        mydata = copy.deepcopy(self.data)
-        sm = SM(mymap, mydata)
-        bytes = sm.tobytes()
-        ods = loadOdfFromBytes(bytes)
+    def checkLoadedFile(self, ods):
         sheet=ods.sheets[0]
         self.assertEqual(sheet['A4'].value,
                          'Getting drunk')
@@ -116,6 +112,80 @@ class TestSpreadsheetMap(unittest.TestCase):
                          90)
         self.assertEqual(sheet['G16'].value,
                          123)
+
+    def test_tobytes(self):
+        mymap = copy.deepcopy(self.mapping)
+        mydata = copy.deepcopy(self.data)
+        sm = SM(mymap, mydata)
+        bytes = sm.tobytes()
+        ods = loadOdfFromBytes(bytes)
+        self.checkLoadedFile(ods)
+
+    def test_save(self):
+        mymap = copy.deepcopy(self.mapping)
+        mydata = copy.deepcopy(self.data)
+        sm = SM(mymap, mydata)
+        from tempfile import mkstemp
+        _, tmp = mkstemp()
+        sm.save(tmp)
+        ods = ezodf.opendoc(tmp)
+        os.remove(tmp)
+        self.checkLoadedFile(ods)
+
+    def test_mimetype(self):
+        self.assertEqual(SM.mimetype(),
+                         'application/vnd.oasis.opendocument.spreadsheet')
+
+    def test_outname(self):
+        mymap = copy.deepcopy(self.mapping)
+        mydata = copy.deepcopy(self.data)
+        sm = SM(mymap, mydata)
+        self.assertEqual(sm.outputname(),
+                         'Expenselist.ods')
+
+    def test_stringrepr(self):
+        mymap = copy.deepcopy(self.mapping)
+        mydata = copy.deepcopy(self.data)
+        sm = SM(mymap, mydata)
+        import ast
+        v=ast.literal_eval(str(sm))
+        smn = SM(v['map'],v['data'])
+        bytes = smn.tobytes()
+        ods = loadOdfFromBytes(bytes)
+        self.checkLoadedFile(ods)
+
+    def test_map(self):
+        mymap = copy.deepcopy(self.mapping)
+        mydata = copy.deepcopy(self.data)
+        sm = SM(mymap, mydata)
+        smn = SM(sm.map(), mydata)
+        bytes = smn.tobytes()
+        ods = loadOdfFromBytes(bytes)
+        self.checkLoadedFile(ods)
+
+    def test_nomap(self):
+        with open('tests/fixtures/nomap_data.json') as data_file:
+            data = json.load(data_file)
+        sm = SM("tests/fixtures/Expenselist.ots", data)
+        bytes = sm.tobytes()
+        ods = loadOdfFromBytes(bytes)
+        self.checkLoadedFile(ods)
+
+    def test_invalidcell(self):
+        with open('tests/fixtures/nomap_data.json') as data_file:
+            data = json.load(data_file)
+        data['dummy']='test'
+        sm = SM("tests/fixtures/Expenselist.ots", data)
+        with self.assertRaises(ValueError):
+            bytes = sm.tobytes()
+
+    def test_duplicatecell(self):
+        with open('tests/fixtures/nomap_data.json') as data_file:
+            data = json.load(data_file)
+        data['a4']='duplicate'
+        sm = SM("tests/fixtures/Expenselist.ots", data)
+        with self.assertRaises(KeyError):
+            bytes = sm.tobytes()
 
 if __name__ == '__main__':
     unittest.main()

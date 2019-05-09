@@ -6,15 +6,15 @@ from __future__ import print_function
 
 import ezodf
 
-import io, os, sys, re, pprint
+import copy, io, os, sys, re, pprint
 from datetime import date, datetime
 
 try:
-  basestring
+  basestring = basestring
 except NameError:
   basestring = str
 try:
-    FileNotFoundError
+    FileNotFoundError = FileNotFoundError
 except NameError:
     FileNotFoundError = IOError
 
@@ -27,6 +27,12 @@ def wordLetter(s):
 
 class SpreadsheetMap:
    def __init__(self, map, data):
+      if isinstance(map, basestring):
+        spreadsheet=map
+        map = dict()
+        map['mapping'] = dict()
+        map['UseFieldNamesDirectly'] = True
+        map['spreadsheet'] = spreadsheet
       self.__map = map
       self.__data = data
       self.map_expand_validate(self.__map)
@@ -42,7 +48,7 @@ class SpreadsheetMap:
 
          for key in self.keys():
             mtype=self.gettype(key)
-            if mtype in ('integer'):
+            if mtype in ('integer', 'number'):
                sheet[key].set_value(self[key])
             else:
                sheet[key].set_value(self[key], mtype)
@@ -81,8 +87,8 @@ class SpreadsheetMap:
              multiple['lut'][i]=j
       return entry
 
-   def map():
-     return self.__map.deepcopy()
+   def map(self):
+     return copy.deepcopy(self.__map)
 
    @staticmethod
    def getcoord(cellname):
@@ -152,17 +158,27 @@ class SpreadsheetMap:
          for c in self.__data.keys():
             if c not in self.__rmap and c not in self.__map['mapping'].keys():
                cu=c.upper()
+               if not cellnumber.match(cu):
+                  raise ValueError("'%s' is not a valid cellreference" % (c))
+               if cu in self.__map['mapping']:
+                  raise KeyError("%s already exists" % (c))
+
                if c != cu:
                   #Raise error if cu already exists
                   self.__data[cu]=self.__data[c]
                   del self.__data[c]
-               print (c)
-               if not cellnumber.match(cu):
-                  raise ValueError("'%s' is not a valid cellreference" % (c))
                entry = {
                   u'cell': cu,
                }
-               self.__map['mapping'][cu]=self.__mapFromMap(entry)
+               t=type(self.__data[cu])
+               if t == float:
+                 t="number"
+               elif t == int:
+                 t="integer"
+               else:
+                 t=self.__map['defaultType']
+               self.__map['mapping'][cu]=self.map_from_map(
+                 entry, t)
                self.__rmap[cu]=cu
 
       #This is a quick and dirty solution, we could probably do this
@@ -177,6 +193,8 @@ class SpreadsheetMap:
    def cast(value, mtype):
       if mtype =='integer':
          return int(value)
+      elif mtype =='number':
+         return float(value)
       return value
 
    def __getitem__(self, item):
