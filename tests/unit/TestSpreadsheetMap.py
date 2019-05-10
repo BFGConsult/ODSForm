@@ -41,6 +41,12 @@ class TestSpreadsheetMap(unittest.TestCase):
         with open('tests/fixtures/data.json') as data_file:
             self.data = json.load(data_file)
 
+        mymap=dict()
+        mymap['mapping']= []
+        mymap['spreadsheet']="tests/fixtures/Expenselist.ots"
+        self.minimalmap=mymap
+
+
     def test_getcoords(self):
         for i,txt in enumerate(self.coords):
             coord = txt+str(1)
@@ -183,9 +189,34 @@ class TestSpreadsheetMap(unittest.TestCase):
         with open('tests/fixtures/nomap_data.json') as data_file:
             data = json.load(data_file)
         data['a4']='duplicate'
-        sm = SM("tests/fixtures/Expenselist.ots", data)
         with self.assertRaises(KeyError):
-            bytes = sm.tobytes()
+            sm = SM("tests/fixtures/Expenselist.ots", data)
+
+    def test_minimal(self):
+        mymap = copy.deepcopy(self.minimalmap)
+        mydata = copy.deepcopy(self.data)
+        sm = SM(mymap, mydata)
+        bytes = sm.tobytes()
+
+    def test_subminimal(self):
+        mymap = copy.deepcopy(self.minimalmap)
+        mydata = copy.deepcopy(self.data)
+        sm = SM(mymap, mydata)
+        bytes = sm.tobytes()
+
+    def test_subminimal1(self):
+        mymap = copy.deepcopy(self.minimalmap)
+        mydata = copy.deepcopy(self.data)
+        del mymap['spreadsheet']
+        with self.assertRaises(ValueError):
+            sm = SM(mymap, mydata)
+
+    def test_subminimal2(self):
+        mymap = copy.deepcopy(self.minimalmap)
+        mydata = copy.deepcopy(self.data)
+        del mymap['mapping']
+        with self.assertRaises(ValueError):
+            sm = SM(mymap, mydata)
 
 if __name__ == '__main__':
     unittest.main()

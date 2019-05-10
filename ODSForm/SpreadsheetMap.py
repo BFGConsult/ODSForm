@@ -1,5 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+"""
+.. module:: SpreadhsheetMap
+   :platform: Unix, Windows
+   :synopsis: A useful module indeed.
+
+.. moduleauthor:: Andrew Carter <andrew@invalid.com>
+
+
+"""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -26,14 +37,30 @@ def wordLetter(s):
    return ord(s)-65
 
 class SpreadsheetMap:
-   def __init__(self, map, data):
-      if isinstance(map, basestring):
-        spreadsheet=map
-        map = dict()
-        map['mapping'] = dict()
-        map['UseFieldNamesDirectly'] = True
-        map['spreadsheet'] = spreadsheet
-      self.__map = map
+   def __init__(self, mymap, data):
+      #
+      if isinstance(mymap, basestring):
+        spreadsheet = mymap
+        mymap = dict()
+        mymap['mapping'] = dict()
+        mymap['UseFieldNamesDirectly'] = True
+        mymap['spreadsheet'] = spreadsheet
+      else:
+        mymap = copy.deepcopy(mymap)
+      for key in ('spreadsheet', 'mapping'):
+        if not key in mymap:
+          raise ValueError("map must contain the key '%s'" % key)
+      useFieldNamesDirectly=mymap.setdefault('UseFieldNamesDirectly', False)
+      self.__map = mymap
+
+      data = copy.deepcopy(data)
+      if useFieldNamesDirectly:
+        for d in list(data.keys()):
+          du=d.upper()
+          if d!=du and cellnumber.match(du):
+            if du in data:
+              raise KeyError("%s already exists" % (d))
+            data[du]=data.pop(d)
       self.__data = data
       self.map_expand_validate(self.__map)
 
@@ -62,9 +89,17 @@ class SpreadsheetMap:
 
    @staticmethod
    def mimetype():
+      """
+      Returns:
+        Returns the mimetype of an openoffice spreadsheet
+      """
       return 'application/vnd.oasis.opendocument.spreadsheet'
 
    def outputname(self):
+      """
+      Returns:
+        Returns a suggestion for naming the file
+      """
       return self.__map['outputname']
 
    def __str__(self):
@@ -113,6 +148,7 @@ class SpreadsheetMap:
    @classmethod
    def map_expand_validate(cls, mymap):
       mymap.setdefault('outputname', 'output.ods')
+      mymap.setdefault('UseFieldNamesDirectly', False)
       defaultType = mymap.setdefault('defaultType', 'string')
       for m in mymap['mapping']:
          if isinstance(mymap['mapping'][m], basestring):
@@ -157,29 +193,24 @@ class SpreadsheetMap:
       if self.__map['UseFieldNamesDirectly']:
          for c in self.__data.keys():
             if c not in self.__rmap and c not in self.__map['mapping'].keys():
-               cu=c.upper()
-               if not cellnumber.match(cu):
+               if not cellnumber.match(c.upper()):
                   raise ValueError("'%s' is not a valid cellreference" % (c))
-               if cu in self.__map['mapping']:
-                  raise KeyError("%s already exists" % (c))
+               assert c == c.upper()
+               assert not (c in self.__map['mapping'])
 
-               if c != cu:
-                  #Raise error if cu already exists
-                  self.__data[cu]=self.__data[c]
-                  del self.__data[c]
                entry = {
-                  u'cell': cu,
+                  u'cell': c,
                }
-               t=type(self.__data[cu])
+               t=type(self.__data[c])
                if t == float:
                  t="number"
                elif t == int:
                  t="integer"
                else:
                  t=self.__map['defaultType']
-               self.__map['mapping'][cu]=self.map_from_map(
+               self.__map['mapping'][c]=self.map_from_map(
                  entry, t)
-               self.__rmap[cu]=cu
+               self.__rmap[c]=c
 
       #This is a quick and dirty solution, we could probably do this
       #less expensively at build time.
