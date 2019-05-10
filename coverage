@@ -1,6 +1,5 @@
 #!/bin/bash
 
-python-coverage erase
 python-coverage run tests/unit/TestSpreadsheetMap.py
 python3-coverage run -a tests/unit/TestSpreadsheetMap.py
 python-coverage report --include=ODSForm/* -m
