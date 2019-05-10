@@ -37,111 +37,111 @@ mapping = {   'UseFieldNamesDirectly': True,
 
 
 def loadConfig(filename):
-   try:
-      if filename=='-':
-         filename=sys.stdin
-      conf = json.load(filename)
-   except:
-      stream = open(filename, "r")
-      conf = yaml.load(stream)
-      stream.close()
-   return conf
+    try:
+        if filename=='-':
+            filename=sys.stdin
+        conf = json.load(filename)
+    except:
+        stream = open(filename, "r")
+        conf = yaml.load(stream)
+        stream.close()
+    return conf
 
 class Utlegg:
-   @staticmethod
-   def getEntry(mydate, text, value):
-      if mydate:
-         mydate=datetime.strptime(mydate, '%Y-%m-%d').date()
-      else:
-         mydate=date.today()
+    @staticmethod
+    def getEntry(mydate, text, value):
+        if mydate:
+            mydate=datetime.strptime(mydate, '%Y-%m-%d').date()
+        else:
+            mydate=date.today()
 
-      entry=[mydate, text, value]
-      return entry
+        entry=[mydate, text, value]
+        return entry
 
-   def getEntryFromList(list):
-      return getEntry(list[0], list[1], list[2])
+    def getEntryFromList(list):
+        return getEntry(list[0], list[1], list[2])
 
-   def fixEntry(obj):
-      if type(obj) == type([]) :
-         return getEntryFromList(obj)
-      else:
-         return obj
+    def fixEntry(obj):
+        if type(obj) == type([]) :
+            return getEntryFromList(obj)
+        else:
+            return obj
 
 def usage():
-   sys.stderr.write("Usage: %s [-o outputfile] inputfile <Purpose>\n\t\t< <Date1> <Text1> <Amount1> > [ <Date2> <Text2> <Amount2> ] […]\n" % sys.argv[0])
+    sys.stderr.write("Usage: %s [-o outputfile] inputfile <Purpose>\n\t\t< <Date1> <Text1> <Amount1> > [ <Date2> <Text2> <Amount2> ] […]\n" % sys.argv[0])
 
 def custom_sort(t):
-   t = t.upper()
-   coord = SpreadsheetMap.getCoord(t)
-   return coord[1]*100000+coord[0]
+    t = t.upper()
+    coord = SpreadsheetMap.getCoord(t)
+    return coord[1]*100000+coord[0]
 
 if __name__ == "__main__":
-   try:
-      opts, args = getopt.getopt(sys.argv[1:], "c:d:o:v",
-                                 ["output=", "conffile=", "date=", "verbose"])
-   except getopt.GetoptError:
-      usage()
-      sys.exit(2)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "c:d:o:v",
+                                   ["output=", "conffile=", "date=", "verbose"])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
 
-   outputfile = None
+    outputfile = None
 
-   datestamp = date.today()
-   conffile = os.path.expanduser("staticdata.yml")
-   verbose = False
-   
-   for o, a in opts:
-      if o in ("-o", "--output"):
-         outputfile = a
-      if o in ("-c", "--conffile"):
-         conffile = a
-      if o in ("-d", "--date"):
-         datestamp = datetime.strptime(a, '%Y-%m-%d').date()
-      if o in ("-v", "--verbose"):
-         verbose = True
+    datestamp = date.today()
+    conffile = os.path.expanduser("staticdata.yml")
+    verbose = False
 
-   nargs=len(args)
-   if ( (nargs - 2) % 3 != 0 ):
-      usage()
-      sys.exit(2)
+    for o, a in opts:
+        if o in ("-o", "--output"):
+            outputfile = a
+        if o in ("-c", "--conffile"):
+            conffile = a
+        if o in ("-d", "--date"):
+            datestamp = datetime.strptime(a, '%Y-%m-%d').date()
+        if o in ("-v", "--verbose"):
+            verbose = True
 
-   inputfile = args[0]
-   if outputfile is None:
-      outputfile = inputfile[inputfile.rfind('/') + 1:]
-      outputfile = outputfile[:outputfile.rfind('.')] + ".ods"
+    nargs=len(args)
+    if ( (nargs - 2) % 3 != 0 ):
+        usage()
+        sys.exit(2)
 
-   conf = loadConfig(conffile)
+    inputfile = args[0]
+    if outputfile is None:
+        outputfile = inputfile[inputfile.rfind('/') + 1:]
+        outputfile = outputfile[:outputfile.rfind('.')] + ".ods"
 
-   if nargs > 1:
-      conf['purpose'] = args[1]
+    conf = loadConfig(conffile)
 
-   purpose = conf['purpose']
-   
-   if not purpose:
-      usage()
-      sys.exit(2)
+    if nargs > 1:
+        conf['purpose'] = args[1]
 
-   if 'entries' in conf:
-      entries=conf['entries']
-   else:
-      entries=[]
+    purpose = conf['purpose']
 
-   for i in range(len(entries)):
-      entries[i]= fixEntry(entries[i])
+    if not purpose:
+        usage()
+        sys.exit(2)
 
-   for i in range(0, (nargs-2)/3):
-      dato=args[i*3+2]
-      text=args[i*3+3].decode('utf8')
-      verdi=float(args[i*3+4])
-      entry=Utlegg.getEntry(dato, text, verdi)
-      entries.append(entry)
+    if 'entries' in conf:
+        entries=conf['entries']
+    else:
+        entries=[]
 
-   conf['entries'] = entries
+    for i in range(len(entries)):
+        entries[i]= fixEntry(entries[i])
 
-   mapping['spreadsheet'] = inputfile
-   smap = SpreadsheetMap(mapping,conf)
+    for i in range(0, (nargs-2)/3):
+        dato=args[i*3+2]
+        text=args[i*3+3].decode('utf8')
+        verdi=float(args[i*3+4])
+        entry=Utlegg.getEntry(dato, text, verdi)
+        entries.append(entry)
 
-   smap.save(outputfile)
-   if verbose:
-      keys = sorted(smap.keys(), key=custom_sort)
-      for key in keys:
-         print "%s : %s" % (key, smap[key])
+    conf['entries'] = entries
+
+    mapping['spreadsheet'] = inputfile
+    smap = SpreadsheetMap(mapping,conf)
+
+    smap.save(outputfile)
+    if verbose:
+        keys = sorted(smap.keys(), key=custom_sort)
+        for key in keys:
+            print "%s : %s" % (key, smap[key])
