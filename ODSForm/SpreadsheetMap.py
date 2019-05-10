@@ -103,7 +103,8 @@ class SpreadsheetMap:
         return self.__map['outputname']
 
     def __str__(self):
-        return pprint.PrettyPrinter(indent=4).pformat({"map":self.__map, "data": self.__data})
+        return pprint.PrettyPrinter(indent=4).pformat({"map":self.__map,
+                                                       "data": self.__data})
 
     @staticmethod
     def map_from_map(entry, defaultType):
@@ -161,9 +162,11 @@ class SpreadsheetMap:
             if cell:
                 cell = cell.upper()
                 if not cellnumber.match(cell):
-                    raise ValueError("'%s' is not a valid cellreference" % (cell))
+                    raise ValueError("'%s' is not a valid cellreference"
+                                     % (cell))
                 mymap['mapping'][m]['cell'] = cell
-            mymap[m]=cls.map_from_map(mymap['mapping'][m], mymap['defaultType'])
+            mymap[m]=cls.map_from_map(mymap['mapping'][m],
+                                      mymap['defaultType'])
         return mymap
 
     def keys(self):
@@ -194,7 +197,8 @@ class SpreadsheetMap:
             for c in self.__data.keys():
                 if c not in self.__rmap and c not in self.__map['mapping'].keys():
                     if not cellnumber.match(c.upper()):
-                        raise ValueError("'%s' is not a valid cellreference" % (c))
+                        raise ValueError(
+                            "'%s' is not a valid cellreference" % (c))
                     assert c == c.upper()
                     assert not (c in self.__map['mapping'])
 
