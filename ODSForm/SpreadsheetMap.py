@@ -3,10 +3,10 @@
 
 """
 .. module:: SpreadhsheetMap
-   :platform: Unix, Windows
-   :synopsis: A useful module indeed.
+   :platform: Independent
+   :synopsis: A module to automate ODF Spreadsheet filling, with json or YAML.
 
-.. moduleauthor:: Andrew Carter <andrew@invalid.com>
+.. moduleauthor:: Tom Fredrik Blenning <Tom.Fredrik@bfgconsult.no>
 
 
 """
