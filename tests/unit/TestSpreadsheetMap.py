@@ -1,14 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import unittest, copy, json
-from ODSForm import SpreadsheetMap
-from ODSForm.SpreadsheetMap import FileNotFoundError
-
 import ezodf, os
 
-import pprint
-
-SM = SpreadsheetMap.SpreadsheetMap
+from ODSForm.SpreadsheetMap import FileNotFoundError, SpreadsheetMap as SM
 
 def loadOdfFromBytes(bytestring):
     dumplocal=False
@@ -63,9 +58,7 @@ class TestSpreadsheetMap(unittest.TestCase):
 
     def test_map_from_map(self):
         mymap = copy.deepcopy(self.mapping)
-        #pprint.PrettyPrinter(indent=4).pprint(mymap)
         SM.map_expand_validate(mymap)
-        #pprint.PrettyPrinter(indent=4).pprint(mymap)
         self.assertEqual(self.mapping['mapping']['address'],
                          mymap['mapping']['address']['cell'],
                          "string should be replaced with datastructure")
