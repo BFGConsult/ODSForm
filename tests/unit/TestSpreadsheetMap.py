@@ -185,6 +185,24 @@ class TestSpreadsheetMap(unittest.TestCase):
         with self.assertRaises(KeyError):
             sm = SM("tests/fixtures/Expenselist.ots", data)
 
+    def test_nonexistant_datapoint(self):
+        mymap = copy.deepcopy(self.mapping)
+        mydata = copy.deepcopy(self.data)
+        mymap['mapping']['dummy']='E4'
+        sm = SM(mymap, mydata)
+        try:
+            with self.assertWarns(Warning):
+                bytes = sm.tobytes()
+        except:
+            raise unittest.SkipTest('assertWarns not supported')
+
+    def test_nonexistant_mappoint(self):
+        mymap = copy.deepcopy(self.mapping)
+        mydata = copy.deepcopy(self.data)
+        sm = SM(mymap, mydata)
+        with self.assertRaises(KeyError):
+            foo = sm['dummy']
+
     def test_minimal(self):
         mymap = copy.deepcopy(self.minimalmap)
         mydata = copy.deepcopy(self.data)

@@ -16,6 +16,8 @@ from __future__ import division
 from __future__ import print_function
 
 import ezodf
+from warnings import warn
+
 
 import copy, io, os, sys, re, pprint
 from datetime import date, datetime
@@ -63,6 +65,7 @@ class SpreadsheetMap:
                     data[du]=data.pop(d)
         self.__data = data
         self.map_expand_validate(self.__map)
+        self.__generate_has_run = False
 
     def __apply_data_to_document(self):
         filename = self.__map['spreadsheet']
@@ -174,6 +177,9 @@ class SpreadsheetMap:
         return self.__vkeys
 
     def genkeys(self):
+        if self.__generate_has_run:
+            return
+        self.__generate_has_run = True
         self.__rmap = {}
         for m in self.__map['mapping']:
             c = self.__map['mapping'][m]['cell']
@@ -220,8 +226,12 @@ class SpreadsheetMap:
         #less expensively at build time.
         vkeys = []
         for k in self.__rmap.keys():
-            if self[k]:
-                vkeys.append(k)
+            try:
+                if self[k]:
+                    vkeys.append(k)
+            except KeyError as e:
+                warn("Mapping for cell '%s' not added. "
+                     "'%s' refers to a datapoint that does not exist" % (k, e.args[1]))
         self.__vkeys = vkeys
 
     @staticmethod
@@ -233,6 +243,9 @@ class SpreadsheetMap:
         return value
 
     def __getitem__(self, item):
+        self.genkeys()
+        if item not in self.__rmap:
+            raise KeyError("'%s' does not exist" % (item))
         key = self.__rmap[item]
         return self.get_data_entry(key, item)
 
@@ -240,6 +253,8 @@ class SpreadsheetMap:
         elem = self.__map['mapping'][key]
         if not elem['multiple']:
             if not elem['combine']:
+                if key not in self.__data:
+                    raise KeyError("'%s' does not exist in data" % (key), key)
                 data = self.__data[key]
             else:
                 data = []
