@@ -39,6 +39,10 @@
             "type": "string"
         },
         "purpose": "a4",
+        "accountingdate": {
+            "cell": "e4",
+            "type": "date"
+        },
         "zip": {
             "pattern": "\\d{1,4}",
             "type": "integer"
