@@ -232,7 +232,7 @@ class SpreadsheetMap:
             except KeyError as e:
                 warn("Mapping for cell '%s' not added. "
                      "'%s' refers to a datapoint that does not exist" % (k, e.args[1]))
-        self.__vkeys = vkeys
+        self.__vkeys = tuple(vkeys)
 
     @staticmethod
     def cast(value, mtype):

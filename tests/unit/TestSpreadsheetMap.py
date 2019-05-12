@@ -29,17 +29,18 @@ def genString(n, base='' , m=26, toplevel=True):
     return l
 
 class TestSpreadsheetMap(unittest.TestCase):
-    def setUp(self):
-        self.coords=genString(2)
+    @classmethod
+    def setUpClass(cls):
+        cls.coords = genString(2)
         with open('tests/fixtures/map.json') as map_file:
-            self.mapping = json.load(map_file)
+            cls.mapping = json.load(map_file)
         with open('tests/fixtures/data.json') as data_file:
-            self.data = json.load(data_file)
+            cls.data = json.load(data_file)
 
         mymap=dict()
         mymap['mapping']= []
         mymap['spreadsheet']="tests/fixtures/Expenselist.ots"
-        self.minimalmap=mymap
+        cls.minimalmap=mymap
 
 
     def test_getcoords(self):
